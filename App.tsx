@@ -1,45 +1,56 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useEffect } from 'react';
+import { Provider } from 'react-redux';
+import { PermissionsAndroid, Platform } from 'react-native';
+import { store } from './src/store';
+import { AppNavigator } from './src/navigation/AppNavigator';
+import { navigate } from './src/navigation/navigationRef';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
 import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+  setupNotificationChannel,
+  registerNotificationHandler,
+  registerBackgroundHandler,
+} from './src/services/NotificationService';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
+// Request notification permission
+async function requestNotificationPermission() {
+  if (Platform.OS === 'android' && Platform.Version >= 33) {
+    const status = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+    );
+    return status === PermissionsAndroid.RESULTS.GRANTED;
+  }
+  return true;
 }
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+const App = () => {
+
+  useEffect(() => {
+    const init = async () => {
+      await requestNotificationPermission();
+      await setupNotificationChannel();
+
+      const unsubscribe = registerNotificationHandler(navigate);
+      registerBackgroundHandler(navigate);
+
+      return unsubscribe;
+    };
+
+    let unsubscribe: (() => void) | undefined;
+
+    init().then(unsub => {
+      unsubscribe = unsub;
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, []);
 
   return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
+    <Provider store={store}>
+      <AppNavigator />
+    </Provider>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+};
 
 export default App;
