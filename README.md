@@ -1,99 +1,77 @@
-# ARCHITECTURE
+# SplitTab
 
-## 1. Data Model
+SplitTab is a React Native app for managing group expenses. It lets users create groups, add expenses with different split types, and settle balances easily.
 
-I used a normalized structure with separate slices for users, groups, expenses, and settlements. Each entity is linked via IDs (for example, expenses store `groupId`, `paidBy`, and splits array).
+## Features
 
-For storage, I used local persistence (AsyncStorage/MMKV) since there is no backend. I chose this over SQLite because the data size is small and setup is simpler for this assignment.
+* Mock login with onboarding
+* Group creation and member management
+* Expense splitting (equal, exact, percentage, shares)
+* Balance tracking and settlements
+* Basic analytics
+* Currency conversion + offline support
+* Location tagging and notifications
 
----
+## Tech Stack
 
-## 2. Settlement Algorithm
-
-I calculate each member’s net balance (who owes or is owed), then split them into two lists:
-
-* debtors (negative balance)
-* creditors (positive balance)
-
-Then I match them greedily:
-
-* take one debtor and one creditor
-* settle the minimum amount between them
-* update balances and repeat
-
-This reduces the number of transactions and handles circular debt.
-
-Time complexity is roughly O(n log n) due to sorting.
+* React Native CLI
+* TypeScript
+* Redux Toolkit
+* React Navigation
 
 ---
 
-## 3. Balance Consistency
+## Setup Instructions
 
-Balances are not stored directly. They are derived using selectors from expenses and settlements.
+### 1. Clone the repo
 
-This avoids stale data because:
+```bash
+git clone <your-repo-link>
+cd splittab
+```
 
-* any update (add/edit/delete) automatically recalculates balances
-* no duplication of state
+### 2. Install dependencies
 
----
+```bash
+npm install
+```
 
-## 4. Split Validation
+### 3. Start Metro
 
-Validation is handled before saving the expense:
+```bash
+npx react-native start
+```
 
-* Exact → sum must match total
-* Percentage → must equal 100%
-* Shares → calculated proportionally
+### 4. Run on Android
 
-Even if validation is bypassed, invalid data cannot be saved because checks run in the same function that updates state.
+Make sure emulator is running or device is connected.
 
----
-
-## 5. Currency Architecture
-
-When an expense is added:
-
-* the current exchange rate is fetched (or taken from cache if offline)
-* that rate is stored along with the expense
-
-If user is offline:
-
-* last cached rate is used
-* a flag indicates offline mode
-
-When viewing later:
-
-* stored historical rate is used (not latest API rate)
+```bash
+npx react-native run-android
+```
 
 ---
 
-## 6. Location Search
+## Android Build (APK)
 
-Implemented using:
+To generate a release APK:
 
-* debounce (400ms) to limit API calls
-* request cancellation using abort controller
+```bash
+cd android
+./gradlew assembleRelease
+```
 
-Flow:
-keystroke → debounce → API call → results → UI update
+APK will be available at:
 
-Last 5 successful searches are cached locally and shown as suggestions.
-
----
-
-## 7. Extensibility (Recurring Expenses)
-
-To support recurring expenses:
-
-* Data model: add recurrence fields (frequency, next date)
-* State: scheduler to generate new entries
-* UI: option while creating expense
-
-Existing logic (splits, balances, settlements) would not need changes, since recurring expenses behave like normal expenses once created.
+```
+android/app/build/outputs/apk/release/app-release.apk
+```
 
 ---
 
-## Final Notes
+## Notes
 
-Focus was on keeping logic simple, predictable, and easy to extend. Most calculations are derived instead of stored to avoid inconsistencies.
+* No backend is used (mock data only)
+* Internet required for currency and location APIs
+* Offline mode works with cached data
+* Architecture details are in `ARCHITECTURE.md` and additional setup/configuration notes are available in the project documentation
