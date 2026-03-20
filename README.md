@@ -26,7 +26,7 @@ SplitTab is a React Native app for managing group expenses. It lets users create
 ### 1. Clone the repo
 
 ```bash
-git clone <your-repo-link>
+git clone https://github.com/Saurabh-Rwt/split-tab.git
 cd splittab
 ```
 
