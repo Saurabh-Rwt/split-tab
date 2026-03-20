@@ -133,7 +133,7 @@ export const OnboardingScreen = () => {
                     style={styles.input}
                     value={name}
                     onChangeText={setName}
-                    placeholder="e.g. Arjun Mehta"
+                    placeholder="e.g. Saurabh Rawat"
                     placeholderTextColor={Colors.textMuted}
                     autoCapitalize="words"
                     autoFocus
